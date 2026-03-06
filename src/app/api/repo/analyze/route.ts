@@ -6,6 +6,11 @@ import { handleApiError } from "@/lib/errorHandler";
 import { analysisService } from "@/modules/analysis/analysis.service";
 
 export async function POST(req: Request) {
+  const session = await getServerSession(authOptions);
+  if (!session) {
+    return errorResponse("Unauthorized. Please login first.", 401);
+  }
+
   try {
     await connectDB();
 
@@ -16,7 +21,6 @@ export async function POST(req: Request) {
       return errorResponse("Repo URL required", 400)
     }
 
-    const session = await getServerSession(authOptions);
     const userId = (session?.user as any)?.id || null;
 
     const result = await analysisService.analyzeRepository(repoUrl, userId);

@@ -1,5 +1,7 @@
 import { NextRequest } from "next/server";
 import { connectDB } from "@/lib/db";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import { errorResponse, successResponse } from "@/lib/apiResponse";
 import { handleApiError } from "@/lib/errorHandler";
 import Analysis from "@/modules/analysis/analysis.model";
@@ -9,6 +11,9 @@ export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const session = await getServerSession(authOptions);
+  if (!session) return errorResponse("Unauthorized", 401);
+
   try {
     await connectDB();
 

@@ -1,6 +1,12 @@
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { redirect } from "next/navigation";
 import SignupCard from "@/components/auth/SignupCard";
 
-export default function SignupPage() {
+export default async function SignupPage() {
+  const session = await getServerSession(authOptions);
+  if (session) redirect("/dashboard");
+
   return (    
     <div className='min-h-screen bg-white dark:bg-[#020817] text-slate-900 dark:text-white flex items-center justify-center px-6'>
       <div className="w-full max-w-md space-y-8"> 

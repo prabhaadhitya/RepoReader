@@ -1,5 +1,7 @@
 import { connectDB } from "@/lib/db";
-import { successResponse } from "@/lib/apiResponse";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { errorResponse, successResponse } from "@/lib/apiResponse";
 import { handleApiError } from "@/lib/errorHandler";
 import Readme from "@/modules/readme/readme.model";
 
@@ -7,6 +9,9 @@ export async function GET(
   req: Request,
   { params }: { params: Promise<{ repoId: string }>}
 ){
+  const session = await getServerSession(authOptions);
+  if (!session) return errorResponse("Unauthorized", 401);
+
   try {
     await connectDB();
     const { repoId } = await params;
