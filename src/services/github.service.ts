@@ -23,7 +23,7 @@ function buildStructure(tree: GitHubTreeItem[]): TreeNode[] {
     const name = parts[parts.length - 1];
     const isFolder = item.type === "tree";
 
-    const node = {
+    const node: TreeNode = {
       name,
       type: isFolder ? "folder" : "file",
       description: "",
