@@ -1,6 +1,7 @@
 import { Layers } from "lucide-react";
+import type { TechStackItem } from "@/types";
 
-export default function TechStackGrid({ techStack }: any) {
+export default function TechStackGrid({ techStack }: { techStack: TechStackItem[] }) {
   
   return (
     <div className="space-y-3 mb-6">
@@ -18,14 +19,14 @@ export default function TechStackGrid({ techStack }: any) {
 
       </div>
       <div className="grid md:grid-cols-2 gap-6">
-        {techStack?.map((tech: any) => (
+        {techStack?.map((tech: TechStackItem, index: number) => (
           <div
-            key={tech}
+            key={index}
             className="border border-slate-700 rounded-2xl p-6 bg-slate-900/40 backdrop-blur hover:border-blue-500 transition"
           >
             <div className="flex gap-4 items-start">
               {/* ICON BADGE */}
-              <div className="w-12 h-12 flex items-center justify-center rounded-xl bg-slate-800 text-blue-500 font-semibold">
+              <div className="w-12 h-12 p-4 flex items-center justify-center rounded-xl bg-slate-800 text-blue-500 font-semibold">
                 {tech.name.slice(0, 2).toUpperCase()}
               </div>
 

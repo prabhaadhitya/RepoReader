@@ -1,12 +1,13 @@
 import Repository from "./repository.model";
+import type { RepoInput } from "@/types";
 
 export const repoService = {
     
-    async createOrUpdateRepo(data: any) {
+    async createOrUpdateRepo(data: RepoInput) {
         return Repository.findOneAndUpdate(
-            { repoUrl: data.repoUrl }, 
+            { repoUrl: data.repoUrl },
             data,
-            { new: true, upsert: true }
+            { returnDocument: "after", upsert: true }
         );
     },
 };

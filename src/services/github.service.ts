@@ -1,3 +1,5 @@
+import type { GitHubTreeItem, TreeNode, RepoData } from "@/types";
+
 function parseRepoUrl(repoUrl: string) {
   try {
     const url = new URL(repoUrl);
@@ -12,9 +14,9 @@ function parseRepoUrl(repoUrl: string) {
   }
 }
 
-function buildStructure(tree: any[]) {
-  const root: any[] = [];
-  const map: Record<string, any> = {};
+function buildStructure(tree: GitHubTreeItem[]): TreeNode[] {
+  const root: TreeNode[] = [];
+  const map: Record<string, TreeNode> = {};
 
   for (const item of tree) {
     const parts = item.path.split("/");
@@ -46,7 +48,7 @@ function buildStructure(tree: any[]) {
 
 export const githubService = {
 
-    async getRepoData(repoUrl: string) {
+    async getRepoData(repoUrl: string): Promise<RepoData> {
         const { owner, repo } = parseRepoUrl(repoUrl);
 
         const repoRes = await fetch(`https://api.github.com/repos/${owner}/${repo}`, {
@@ -58,7 +60,6 @@ export const githubService = {
             throw new Error("GitHub repo not found");
         }
         const repoData = await repoRes.json();
-        console.log(repoData)
         
         const treeRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/git/trees/${repoData.default_branch}?recursive=1`, {
             headers: {
@@ -66,11 +67,10 @@ export const githubService = {
             }
         });
         const treeData = await treeRes.json();
-        console.log(treeData)
 
         const folderTree =
-        treeData?.tree?.map((item: any) => item.path).slice(0, 60) || []; // limit for token safety
-        const structure = buildStructure(treeData?.tree?.slice(0, 60) || []);
+        treeData?.tree?.map((item: GitHubTreeItem) => item.path).slice(0, 300) || []; // limit for token safety
+        const structure = buildStructure(treeData?.tree?.slice(0, 300) || []);
 
         let packageJson = null;
         try {

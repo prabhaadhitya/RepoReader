@@ -1,5 +1,6 @@
 // import OpenAI from 'openai'
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import type { Explanation, TechStackItem } from "@/types";
 
 // const openai = new OpenAI({
 //   apiKey: process.env.OPENAI_API_KEY!,
@@ -9,12 +10,8 @@ const genAI = new GoogleGenerativeAI(
 );
 
 const model = genAI.getGenerativeModel({
-  model: "gemini-2.0-flash",
+  model: "gemini-2.5-flash",
 });
-
-function safeText(res: any) {
-    return res?.response?.text?.() || "AI could not generate content.";
-}
 
 async function generateWithRetry(prompt: string, retries = 3): Promise<string> {
   for (let i = 0; i < retries; i++) {
@@ -43,7 +40,7 @@ export const aiService = {
         packageJson: string | null;
         techStack: string[],
         difficulty: string,
-    }) {
+    }): Promise<Explanation> {
         const prompt = `
             You are a senior software engineer explaining a GitHub repository to a beginner.
 
@@ -83,7 +80,9 @@ export const aiService = {
         // return safeText(result);
         // const text = result?.response?.text?.() || "{}";
 
-        const text = await generateWithRetry(prompt);
+        // const text = await generateWithRetry(prompt);
+        const result = await model.generateContent(prompt);
+        const text = result?.response?.text?.() || "{}";
         try {
             const clean = text.replace(/```json|```/g, "").trim();
             return JSON.parse(clean);
@@ -99,10 +98,10 @@ export const aiService = {
 
     async generateReadme(data: {
         repoName: string;
-        explanation: any;
+        explanation: Explanation;
         folderTree: string[];
         packageJson: string | null;
-    }) {
+    }): Promise<string> {
         const prompt = `
             Generate a professional README.md.
 
@@ -138,7 +137,9 @@ export const aiService = {
         // return (await completion).choices[0].message.content;
         // return result.response.text();
         // return safeText(result);
-        return await generateWithRetry(prompt);
+        // return await generateWithRetry(prompt);
+        const result = await model.generateContent(prompt);
+        return result?.response?.text?.() || "Could not generate README.";
     },
 
 }    

@@ -1,15 +1,32 @@
-import RepoHeader from "@/components/repo/RepoHeader"
-import ExplanationCards from "@/components/repo/ExplanationCards"
-import TechStackGrid from "@/components/repo/TechStackGrid"
-import FolderTree from "@/components/repo/FolderTree"
-import RepoActions from "@/components/repo/RepoActions"
+import { cookies } from "next/headers";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { redirect } from "next/navigation";
+import RepoHeader from "@/components/repo/RepoHeader";
+import ExplanationCards from "@/components/repo/ExplanationCards";
+import TechStackGrid from "@/components/repo/TechStackGrid";
+import FolderTree from "@/components/repo/FolderTree";
+import RepoActions from "@/components/repo/RepoActions";
 
 export default async function RepoPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
 
+  const session = await getServerSession(authOptions);
+  if (!session) redirect("/auth/login");
+
+  const cookieStore = await cookies();
+  const cookieHeader = cookieStore.getAll()
+    .map(c => `${c.name}=${c.value}`)
+    .join("; ");
+
   const res = await fetch(
     `${process.env.NEXT_PUBLIC_BASE_URL}/api/analysis/${id}`,
-    { cache: "no-cache" }
+    {
+      cache: "no-cache",
+      headers: {
+        Cookie: cookieHeader,
+      },
+    }
   );
 
   const json = await res.json();
@@ -30,8 +47,8 @@ export default async function RepoPage({ params }: { params: Promise<{ id: strin
         <ExplanationCards explanation={data.analysis.explanation} />
         <TechStackGrid techStack={data.analysis.explanation.techStack} />
         <FolderTree structure={data.repository.structure} />
-        <RepoActions repoId={id} />      
+        <RepoActions repoId={id} />
       </div>
     </main>
-  )
+  );
 }

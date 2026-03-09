@@ -4,6 +4,7 @@ import { repoService } from "../repo/repo.service";
 import { aiService } from "../ai/ai.service";
 import { readmeService } from "../readme/readme.service";
 import { detectTechStack, calculateDifficulty } from "./analysis.utils";
+import type { Explanation } from "@/types";
 
 export const analysisService = {
 
@@ -23,7 +24,7 @@ export const analysisService = {
       difficulty
     });
 
-    const explanation = await aiService.generateExplanation({
+    const explanation: Explanation = await aiService.generateExplanation({
       repoName: repoData.repoName,
       description: repoData.description,
       folderTree: repoData.folderTree,

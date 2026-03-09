@@ -1,4 +1,6 @@
-export async function getUserRepos (accessToken: string) {
+import type { UserRepo } from "@/types";
+
+export async function getUserRepos (accessToken: string): Promise<UserRepo[]> {
     const res = await fetch("https://api.github.com/user/repos?sort=updated&per_page=20", {
         headers: {
             Authorization: `Bearer ${accessToken}`,
