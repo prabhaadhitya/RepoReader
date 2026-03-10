@@ -5,11 +5,15 @@ import { aiService } from "../ai/ai.service";
 import { readmeService } from "../readme/readme.service";
 import { detectTechStack, calculateDifficulty } from "./analysis.utils";
 import type { Explanation } from "@/types";
+import { logger } from "@/lib/logger";
 
 export const analysisService = {
 
-  async analyzeRepository(repoUrl: string, userId: string) {
+  async analyzeRepository(repoUrl: string, userId: string | null) {
+    logger.info("ANALYSIS", "Starting analysis", { repoUrl, userId });
     const repoData = await githubService.getRepoData(repoUrl);
+    logger.info("ANALYSIS", "GitHub data fetched", { repoName: repoData.repoName });
+
     const techStack = detectTechStack(repoData.packageJson);
     const difficulty = calculateDifficulty(repoData.folderTree, techStack)
 
@@ -23,6 +27,7 @@ export const analysisService = {
       structure: repoData.structure,
       difficulty
     });
+    logger.info("ANALYSIS", "Repository saved", { repoId: String(repository._id) });
 
     const explanation: Explanation = await aiService.generateExplanation({
       repoName: repoData.repoName,
@@ -38,6 +43,7 @@ export const analysisService = {
       userId,
       explanation,
     });
+    logger.info("ANALYSIS", "Analysis saved", { analysisId: String(analysis._id) });
 
     const readmeContent = await aiService.generateReadme({
       repoName: repoData.repoName,
@@ -52,6 +58,10 @@ export const analysisService = {
       readmeContent,
       userId
     );
+    logger.info("ANALYSIS", "Analysis complete", {
+      repoId: String(repository._id),
+      userId,
+    });
 
     return {
       repository,

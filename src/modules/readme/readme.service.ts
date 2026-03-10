@@ -2,7 +2,7 @@ import Readme from './readme.model';
 
 export const readmeService = {
     
-    async saveReadme(repoId: string, analysisId: string, content: string, userId: string) {
+    async saveReadme(repoId: string, analysisId: string, content: string, userId: string | null) {
         await Readme.updateMany(
             { repoId },
             { isLatest: false }

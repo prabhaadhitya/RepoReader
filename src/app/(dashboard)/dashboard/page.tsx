@@ -1,15 +1,26 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { connectDB } from "@/lib/db";
+import User from "@/modules/user/user.model"; 
 import DetailCards from "@/components/dashboard/DetailCards";
 import RepoInput from "@/components/dashboard/RepoInput";
 import RepoList from "@/components/dashboard/RepoList";
+import CreditsDisplay from "@/components/dashboard/CreditsDisplay";
 import { getUserRepos } from "@/services/github.repos.service";
 
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions);
 
+  const userId = (session?.user as { id: string })?.id;
   const isGithubUser = (session as any)?.provider === "github";
   const accessToken = (session as any)?.accessToken;
+
+  await connectDB();
+
+  const user = isGithubUser
+    ? await User.findOne({ githubId: Number(userId) })
+    : await User.findById(userId);
+  const credits = user?.credits ?? 0;
 
   let repos: any[] = [];
   if (isGithubUser && accessToken) {
@@ -28,6 +39,7 @@ export default async function DashboardPage() {
             Paste a public GitHub repository link below and we'll break it down for you.
           </p>
         </div>
+        <CreditsDisplay credits={credits} />
         <RepoInput />
         <DetailCards />
 

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Star, Lock, Globe } from "lucide-react";
+import AnalyzingOverlay from "./AnalyzingOverlay";
 
 type Repo = {
   id: number;
@@ -55,6 +56,8 @@ export default function RepoList({ repos }: { repos: Repo[] }) {
 
   return (
     <div className="space-y-4">
+      {/* Overlay */}
+      {loadingRepo && <AnalyzingOverlay />}
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-semibold text-white">Your Repositories</h2>
         <span className="text-sm text-slate-400">{repos.length} repos</span>

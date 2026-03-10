@@ -1,13 +1,9 @@
-// import OpenAI from 'openai'
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import type { Explanation, TechStackItem } from "@/types";
+import { logger } from "@/lib/logger";
+import { safeAI } from "@/lib/safeAI";
 
-// const openai = new OpenAI({
-//   apiKey: process.env.OPENAI_API_KEY!,
-// });
-const genAI = new GoogleGenerativeAI(
-  process.env.GEMINI_API_KEY!
-);
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
 const model = genAI.getGenerativeModel({
   model: "gemini-2.5-flash",
@@ -41,6 +37,7 @@ export const aiService = {
         techStack: string[],
         difficulty: string,
     }): Promise<Explanation> {
+
         const prompt = `
             You are a senior software engineer explaining a GitHub repository to a beginner.
 
@@ -74,34 +71,41 @@ export const aiService = {
         //     temperature: 0.3,            
         // });
         
-        // const result = await model.generateContent(prompt);
-        // return completion.choices[0].message.content;   
-        // return result.response.text(); 
-        // return safeText(result);
-        // const text = result?.response?.text?.() || "{}";
-
         // const text = await generateWithRetry(prompt);
-        const result = await model.generateContent(prompt);
-        const text = result?.response?.text?.() || "{}";
+
+        logger.info("AI", "Generating explanation", { repoName: input.repoName });
+
+        const result = await safeAI(
+          () => model.generateContent(prompt),
+          "AI"
+        );
+        if (!result.success) {
+          throw new Error(result.error);
+        }
+
+        const text = result.data?.response?.text?.() || "{}";
+        logger.info("AI", "Explanation generated successfully", { repoName: input.repoName });
+        
         try {
-            const clean = text.replace(/```json|```/g, "").trim();
-            return JSON.parse(clean);
+          const clean = text.replace(/```json|```/g, "").trim();
+          return JSON.parse(clean);
         } catch {
-            return {
-                what: text.slice(0, 300),
-                who: "Developers looking to use this project.",
-                features: ["See the repository for details."],
-                techStack: input.techStack.map((t) => ({ name: t, description: "" })),
-            };
+          return {
+            what: text.slice(0, 300),
+            who: "Developers looking to use this project.",
+            features: ["See the repository for details."],
+            techStack: input.techStack.map((t) => ({ name: t, description: "" })),
+          };
         }
     },
 
     async generateReadme(data: {
-        repoName: string;
-        explanation: Explanation;
-        folderTree: string[];
-        packageJson: string | null;
+      repoName: string;
+      explanation: Explanation;
+      folderTree: string[];
+      packageJson: string | null;
     }): Promise<string> {
+
         const prompt = `
             Generate a professional README.md.
 
@@ -109,7 +113,7 @@ export const aiService = {
             What it does: ${data.explanation.what}
             Who it is for: ${data.explanation.who}
             Features: ${data.explanation.features?.join(", ")}
-            Tech Stack: ${data.explanation.techStack?.map((t: any) => t.name).join(", ")}
+            Tech Stack: ${data.explanation.techStack?.map((t: TechStackItem) => t.name).join(", ")}
             Folder Tree: ${data.folderTree.join("\n")}
             package.json: ${data.packageJson ?? "Not available"}
 
@@ -132,14 +136,76 @@ export const aiService = {
         //     temperature: 0.2,
         // });
         
-        // const result = await model.generateContent(prompt);
-
-        // return (await completion).choices[0].message.content;
-        // return result.response.text();
-        // return safeText(result);
         // return await generateWithRetry(prompt);
-        const result = await model.generateContent(prompt);
-        return result?.response?.text?.() || "Could not generate README.";
+        logger.info("AI", "Generating README", { repoName: data.repoName });
+        const result = await safeAI(
+          () => model.generateContent(prompt),
+          "AI"
+        );
+        if (!result.success) {
+          throw new Error(result.error);
+        }
+
+        logger.info("AI", "README generated successfully", { repoName: data.repoName });
+        return result.data?.response?.text?.() || "Could not generate README.";
     },
 
+    async streamReadme(data: {
+      repoName: string;
+      explanation: Explanation;
+      folderTree: string[];
+      packageJson: string | null;
+    }): Promise<ReadableStream> {
+      const prompt = `
+        Generate a professional README.md.
+
+        Project: ${data.repoName}
+        What it does: ${data.explanation.what}
+        Who it is for: ${data.explanation.who}
+        Features: ${data.explanation.features?.join(", ")}
+        Tech Stack: ${data.explanation.techStack?.map((t: TechStackItem) => t.name).join(", ")}
+        Folder Tree: ${data.folderTree.join("\n")}
+        package.json: ${data.packageJson ?? "Not available"}
+
+        Rules:
+        - Beginner friendly
+        - Clear installation steps
+        - Include Tech Stack
+        - Include Usage
+        - No emojis
+        - Clean markdown
+      `.trim();
+
+      logger.info("AI", "Starting README stream", { repoName: data.repoName });
+
+      const result = await safeAI(
+        () => model.generateContentStream(prompt),
+        "AI"
+      );
+
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+
+      const stream = result.data;
+
+      return new ReadableStream({
+        async start(controller) {
+          try {
+            for await (const chunk of stream.stream) {
+              const text = chunk.text();
+              if (text) {
+                controller.enqueue(new TextEncoder().encode(text));
+              }
+            }
+            logger.info("AI", "README stream complete", { repoName: data.repoName });
+            controller.close();
+          } catch (error) {
+            const err = error as { message?: string };
+            logger.error("AI", "Stream error", { message: err.message });
+            controller.error(error);
+          }
+        },
+      });
+    },
 }    

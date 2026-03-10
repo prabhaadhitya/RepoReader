@@ -3,7 +3,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import ReadmeHeader from "@/components/readme/ReadmeHeader";
-import MarkdownViewer from "@/components/readme/MarkdownViewer";
+// import MarkdownViewer from "@/components/readme/MarkdownViewer";
+import StreamingReadme from "@/components/readme/StreamingReadme";
 import VersionHistory from "@/components/readme/VersionHistory";
 import InfoCard from "@/components/readme/InfoCard";
 import ReadmeActions from "@/components/readme/ReadmeActions";
@@ -46,7 +47,8 @@ export default async function ReadmePage({ params }: { params: Promise<{ id: str
         <ReadmeHeader content={readme.content} />
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2">
-            <MarkdownViewer content={readme.content} />
+            <StreamingReadme repoId={id} />
+            {/* <MarkdownViewer content={readme.content} /> */}
           </div>
           <div className="space-y-6 lg:sticky lg:top-24 h-fit">
             <VersionHistory repoId={id} />

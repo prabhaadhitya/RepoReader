@@ -7,7 +7,7 @@ const UserSchema = new mongoose.Schema({
     name: String,
     avatar: String,
     plan: { type: String, default: "free" },
-    credits: { type: Number, default: 10 },
+    credits: { type: Number, default: 3 },
     beginnerMode: { type: Boolean, default: true },
 }, { timestamps: true });
 
