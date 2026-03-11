@@ -20,12 +20,14 @@ export default function RepoInput() {
 
   const handleAnalyze = async (e: React.FormEvent) => {
     e.preventDefault();
-
     if (!repoUrl.trim()) return;
 
+    setLoading(true);
+    setError("");
+
+    await new Promise((res) => setTimeout(res, 50));
+
     try {
-      setLoading(true);
-      setError("");
       const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/repo/analyze`, {
         method: "POST",
         headers: {

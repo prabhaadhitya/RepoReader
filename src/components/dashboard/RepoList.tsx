@@ -23,10 +23,12 @@ export default function RepoList({ repos }: { repos: Repo[] }) {
   const [error, setError] = useState("");
   
   const handleAnalyze = async (fullName: string) => {
-    try {
-      setLoadingRepo(fullName);
-      setError("");
+    setError("");
+    setLoadingRepo(fullName);
 
+    await new Promise((res) => setTimeout(res, 50));
+
+    try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/repo/analyze`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -39,12 +41,12 @@ export default function RepoList({ repos }: { repos: Repo[] }) {
         router.push(`/repo/${json.data.repository._id}`);
       } else {
         setError(json.message || "Analysis failed.");
+        setLoadingRepo(null);
       }
     } catch (error) {
       setError("Something went wrong. Please try again.");
-      console.log("Error in fetching repo list: ", error);
-    } finally {
       setLoadingRepo(null);
+      console.log("Error in fetching repo list: ", error);
     }
   }
 

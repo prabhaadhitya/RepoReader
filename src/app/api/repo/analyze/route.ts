@@ -56,10 +56,15 @@ export async function POST(req: Request) {
 
     const result = await analysisService.analyzeRepository(repoUrl, userId);
 
-    if (isGithub) {
-      await User.findOneAndUpdate({ githubId: Number(userId) }, { $inc: { credits: -1 } })
+    if (result.isNew) {
+      if (isGithub) {
+        await User.findOneAndUpdate({ githubId: Number(userId) }, { $inc: { credits: -1 } })
+      } else {
+        await User.findByIdAndUpdate(userId, { $inc: { credits: -1 } });
+      }
+      logger.info("API", "Credits decremented", { userId });
     } else {
-      await User.findByIdAndUpdate(userId, { $inc: { credits: -1 } });
+      logger.info("API", "Existing analysis returned, credits unchanged", { userId });
     }
     
     logger.info("API", "Analysis complete", { userId, repoUrl });

@@ -7,14 +7,18 @@ export default function StreamingReadme({ repoId }: { repoId: string }) {
   const [content, setContent] = useState("");
   const [streaming, setStreaming] = useState(true);
   const [error, setError] = useState("");
+  const [streamKey, setStreamKey] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
+    setContent("");
+    setStreaming(true);
+    setError("");
 
     async function startStream() {
       try {
         const res = await fetch(
-          `${process.env.NEXT_PUBLIC_BASE_URL}/api/repo/stream?repoId=${repoId}`
+          `${process.env.NEXT_PUBLIC_BASE_URL}/api/repo/stream?repoId=${repoId}&t=${Date.now()}`
         );
 
         if (!res.ok || !res.body) {
@@ -47,7 +51,7 @@ export default function StreamingReadme({ repoId }: { repoId: string }) {
     return () => {
       cancelled = true;
     };
-  }, [repoId]);
+  }, [repoId, streamKey]);
 
   if (error) {
     return (
@@ -81,6 +85,13 @@ export default function StreamingReadme({ repoId }: { repoId: string }) {
           )}
         </div>
       )}
+
+      {/* Hidden trigger to restart stream */}
+      <button
+        id="restart-stream"
+        className="hidden"
+        onClick={() => setStreamKey((k) => k + 1)}
+      />
     </div>
   );
 }
